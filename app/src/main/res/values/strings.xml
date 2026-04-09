@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Minesweeper</string>
+    <string name="timer">Time: </string>
+    <string name="mines">Mines: </string>
+    <string name="btn">Rules</string>
+    <string name="choice">Select game difficulty: </string>
+    <string-array name="levels">
+        <item>Easy</item>
+        <item>Medium</item>
+        <item>Hard</item>
+    </string-array>
+
+</resources>

@@ -1,5 +1,7 @@
 package com.example.minesweeper;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
 
 public class Game {
@@ -107,26 +109,33 @@ public class Game {
     }
 
     private void openNeighbors(int row, int col) {
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
 
-                int newRow = row + x;
-                int newCol = col + y;
+        Queue<int[]> queue = new LinkedList<>();
+        queue.add(new int[]{row, col});
 
-                if (newRow >= 0 && newRow < rows &&
-                        newCol >= 0 && newCol < cols) {
+        while (!queue.isEmpty()) {
+            int[] current = queue.poll();
+            int r = current[0];
+            int c = current[1];
 
-                    Cell neighbor = board[newRow][newCol];
+            for (int x = -1; x <= 1; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    int newRow = r + x;
+                    int newCol = c + y;
 
-                    if (!neighbor.isOpen() && !(neighbor instanceof Mines)) {
+                    if (newRow >= 0 && newRow < rows &&
+                            newCol >= 0 && newCol < cols) {
 
-                        neighbor.open();
+                        Cell neighbor = board[newRow][newCol];
 
-                        if (neighbor instanceof NumberCell) {
-                            int minesAround = ((NumberCell) neighbor).getMinesAround();
+                        if (!neighbor.isOpen() && !neighbor.isFlagged() && !(neighbor instanceof Mines)) {
+                            neighbor.open();
 
-                            if (minesAround == 0) {
-                                openNeighbors(newRow, newCol);
+                            if (neighbor instanceof NumberCell) {
+                                int minesAround = ((NumberCell) neighbor).getMinesAround();
+                                if (minesAround == 0) {
+                                    queue.add(new int[]{newRow, newCol});
+                                }
                             }
                         }
                     }

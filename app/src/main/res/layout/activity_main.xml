@@ -13,12 +13,13 @@
         android:layout_width="390dp"
         android:layout_height="80dp"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="100dp"
         android:layout_marginEnd="10dp"
         app:cardBackgroundColor="@color/panel"
         app:cardCornerRadius="8dp"
         app:cardElevation="5dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -54,9 +55,9 @@
                 android:id="@+id/txt_timer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="10dp"
-                android:fontFamily="@font/baloo_2_semibold"
+                android:layout_marginStart="35dp"
+                android:layout_marginTop="15dp"
+                android:fontFamily="sans-serif-black"
                 android:text="@string/timer"
                 android:textSize="22sp" />
         </androidx.cardview.widget.CardView>
@@ -68,15 +69,15 @@
             android:layout_marginStart="260dp"
             android:layout_marginTop="10dp"
             app:cardBackgroundColor="@color/menu"
-            app:cardCornerRadius="5dp" >
+            app:cardCornerRadius="5dp">
 
             <TextView
                 android:id="@+id/txt_mines"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="10dp"
-                android:fontFamily="@font/baloo_2_semibold"
+                android:layout_marginStart="35dp"
+                android:layout_marginTop="15dp"
+                android:fontFamily="sans-serif-black"
                 android:text="@string/mines"
                 android:textSize="22sp" />
         </androidx.cardview.widget.CardView>
@@ -93,11 +94,10 @@
         app:cardBackgroundColor="@color/panel"
         app:cardCornerRadius="10dp"
         app:cardElevation="5dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btn_rules"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cardView"
-        app:layout_constraintVertical_bias="0.083">
+        app:layout_constraintTop_toBottomOf="@+id/cardView">
 
         <androidx.gridlayout.widget.GridLayout
             android:id="@+id/gridLayout"
@@ -109,41 +109,18 @@
 
     </androidx.cardview.widget.CardView>
 
-    <TextView
-        android:id="@+id/txt_choice"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="108dp"
-        android:fontFamily="@font/baloo_2_semibold"
-        android:text="@string/choice"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.075"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Spinner
-        android:id="@+id/spinner"
-        android:layout_width="126dp"
-        android:layout_height="38dp"
-        android:layout_marginBottom="68dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.185"
-        app:layout_constraintStart_toStartOf="parent" />
-
     <Button
         android:id="@+id/btn_rules"
-        android:layout_width="116dp"
-        android:layout_height="48dp"
-        android:layout_marginBottom="80dp"
+        android:layout_width="150dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="76dp"
         android:backgroundTint="@color/btn"
-        android:fontFamily="@font/baloo_2_semibold"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/btn"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.864"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

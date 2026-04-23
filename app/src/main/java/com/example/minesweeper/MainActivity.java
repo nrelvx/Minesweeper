@@ -5,12 +5,18 @@ import android.os.Handler;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.gridlayout.widget.GridLayout;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int COLOR_MINE = 0xFFFF0000;
+    private static final int COLOR_OPEN_EMPTY = 0xFFAAAAAA;
+    private static final int COLOR_OPEN_NUMBER = 0xFFFFFFFF;
+    private static final int COLOR_CLOSED = 0xFF808080;
+    private static final int COLOR_FLAGGED = 0xFFFFA500;
+
     private Game game;
     private GridLayout gridLayout;
     private Button[][] buttons;
@@ -32,41 +38,28 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize views
         gridLayout = findViewById(R.id.gridLayout);
         txtTimer = findViewById(R.id.txt_timer);
         txtMines = findViewById(R.id.txt_mines);
         btnRestart = findViewById(R.id.btn_restart);
         btnRules = findViewById(R.id.btn_rules);
 
-        // Start new game
         startNewGame();
 
-        // Restart button click listener
         btnRestart.setOnClickListener(v -> startNewGame());
-
-        // Rules button click listener
         btnRules.setOnClickListener(v -> showRulesDialog());
     }
 
     private void showRulesDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("📖 Правила гри")
-                .setMessage("🎯 **Мета гри:**\nВідкрити всі клітинки, які не містять мін.\n\n" +
-                        "🖱️ **Керування:**\n" +
+                .setMessage("🎯 Мета гри:\nВідкрити всі клітинки без мін.\n\n" +
+                        "🖱️ Керування:\n" +
                         "• Коротке натискання = Відкрити клітинку\n" +
                         "• Довге натискання = Поставити/прибрати прапорець 🚩\n\n" +
-                        "🔢 **Цифри:**\n" +
-                        "Цифри показують, скільки мін знаходиться поряд з цією клітинкою.\n\n" +
-                        "💣 **Програш:**\n" +
-                        "Якщо ви відкриєте міну, ви програєте!\n\n" +
-                        "🏆 **Перемога:**\n" +
-                        "Відкрийте всі безпечні клітинки, щоб перемогти!\n\n" +
-                        "💡 **Порада:**\n" +
-                        "Використовуйте прапорці, щоб відмічати підозрілі місця!\n\n" +
-                        "🔍 **Підказка:**\n" +
-                        "Якщо навколо відкритої клітинки з цифрою стоїть стільки ж прапорців,\n" +
-                        "то решту клітинок навколо можна безпечно відкрити.")
+                        "🔢 Цифри показують кількість мін поряд.\n\n" +
+                        "💣 Програш: відкрили міну.\n\n" +
+                        "🏆 Перемога: відкрили всі безпечні клітинки.")
                 .setPositiveButton("Зрозуміло!", null)
                 .setNeutralButton("Нова гра", (dialog, which) -> startNewGame())
                 .show();
@@ -88,17 +81,9 @@ public class MainActivity extends AppCompatActivity {
         gridLayout.setColumnCount(cols);
         buttons = new Button[rows][cols];
 
-        // Calculate cell size to fit screen
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
         int screenHeight = getResources().getDisplayMetrics().heightPixels;
-
-        // Calculate available space
-        int availableWidth = screenWidth - 100;
-        int availableHeight = screenHeight - 500;
-
-        int cellWidth = availableWidth / cols;
-        int cellHeight = availableHeight / rows;
-        int cellSize = Math.min(cellWidth, cellHeight);
+        int cellSize = Math.min((screenWidth - 100) / cols, (screenHeight - 500) / rows);
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -113,58 +98,51 @@ public class MainActivity extends AppCompatActivity {
                 final int row = i;
                 final int col = j;
 
-                // Short click - open cell
-                btn.setOnClickListener(v -> {
-                    if (gameActive && !game.getCell(row, col).isFlagged()) {
-                        if (seconds == 0) {
-                            startTimer();
-                        }
-
-                        game.openCell(row, col);
-                        updateBoardUI();
-
-                        // Check if player lost
-                        if (game.getCell(row, col).isMine() && game.getCell(row, col).isOpen()) {
-                            gameActive = false;
-                            stopTimer();
-                            showAllMines();
-                            new AlertDialog.Builder(this)
-                                    .setTitle("💥 БАХ!")
-                                    .setMessage("Ви наступили на міну!\n\nЧас: " + seconds + " секунд")
-                                    .setPositiveButton("Нова гра", (dialog, which) -> startNewGame())
-                                    .setNegativeButton("Вийти", (dialog, which) -> finish())
-                                    .show();
-                        }
-
-                        checkWin();
-                    }
-                });
-
-                // Long click - place/remove flag
-                btn.setOnLongClickListener(v -> {
-                    if (gameActive) {
-                        Cell cell = game.getCell(row, col);
-                        if (!cell.isOpen()) {
-                            cell.toggleFlag();
-                            if (cell.isFlagged()) {
-                                flagsLeft--;
-                            } else {
-                                flagsLeft++;
-                            }
-                            txtMines.setText("🚩 " + flagsLeft);
-                            updateBoardUI();
-                            checkWin();
-                        }
-                        return true;
-                    }
-                    return false;
-                });
+                btn.setOnClickListener(v -> handleCellClick(row, col));
+                btn.setOnLongClickListener(v -> handleCellLongClick(row, col));
 
                 gridLayout.addView(btn);
                 buttons[i][j] = btn;
             }
         }
         updateBoardUI();
+    }
+
+    private void handleCellClick(int row, int col) {
+        if (!gameActive || game.getCell(row, col).isFlagged()) return;
+
+        if (seconds == 0) startTimer();
+
+        game.openCell(row, col);
+        updateBoardUI();
+
+        if (game.getCell(row, col).isMine() && game.getCell(row, col).isOpen()) {
+            gameActive = false;
+            stopTimer();
+            showAllMines();
+            new AlertDialog.Builder(this)
+                    .setTitle("💥 БАХ!")
+                    .setMessage("Ви наступили на міну!\n\nЧас: " + seconds + " секунд")
+                    .setPositiveButton("Нова гра", (dialog, which) -> startNewGame())
+                    .setNegativeButton("Вийти", (dialog, which) -> finish())
+                    .show();
+        } else {
+            checkWin();
+        }
+    }
+
+    private boolean handleCellLongClick(int row, int col) {
+        if (!gameActive) return false;
+
+        Cell cell = game.getCell(row, col);
+        if (!cell.isOpen()) {
+            cell.toggleFlag();
+            flagsLeft += cell.isFlagged() ? -1 : 1;
+            txtMines.setText("🚩 " + flagsLeft);
+            updateBoardUI();
+            checkWin();
+        }
+        return true;
     }
 
     private void updateBoardUI() {
@@ -176,34 +154,29 @@ public class MainActivity extends AppCompatActivity {
                 if (cell.isOpen()) {
                     if (cell.isMine()) {
                         btn.setText("💣");
-                        btn.setBackgroundColor(0xFFFF0000);
-                    } else if (cell instanceof NumberCell) {
-                        int num = ((NumberCell) cell).getMinesAround();
-                        if (num == 0) {
-                            btn.setText("");
-                            btn.setBackgroundColor(0xFFAAAAAA);
-                        } else {
-                            btn.setText(String.valueOf(num));
-                            btn.setBackgroundColor(0xFFFFFFFF);
-                            // Set different colors for different numbers
-                            if (num == 1) btn.setTextColor(0xFF0000FF);
-                            else if (num == 2) btn.setTextColor(0xFF008000);
-                            else if (num == 3) btn.setTextColor(0xFFFF0000);
-                            else if (num == 4) btn.setTextColor(0xFF000080);
-                            else if (num == 5) btn.setTextColor(0xFF8B4513);
-                            else btn.setTextColor(0xFF000000);
-                        }
+                        btn.setBackgroundColor(COLOR_MINE);
+                    } else {
+                        int num = cell.getMinesAround();
+                        btn.setText(num == 0 ? "" : String.valueOf(num));
+                        btn.setBackgroundColor(num == 0 ? COLOR_OPEN_EMPTY : COLOR_OPEN_NUMBER);
+                        btn.setTextColor(getNumberColor(num));
                     }
                 } else {
-                    if (cell.isFlagged()) {
-                        btn.setText("🚩");
-                        btn.setBackgroundColor(0xFFFFA500);
-                    } else {
-                        btn.setText("");
-                        btn.setBackgroundColor(0xFF808080);
-                    }
+                    btn.setText(cell.isFlagged() ? "🚩" : "");
+                    btn.setBackgroundColor(cell.isFlagged() ? COLOR_FLAGGED : COLOR_CLOSED);
                 }
             }
+        }
+    }
+
+    private int getNumberColor(int num) {
+        switch (num) {
+            case 1: return 0xFF0000FF;
+            case 2: return 0xFF008000;
+            case 3: return 0xFFFF0000;
+            case 4: return 0xFF000080;
+            case 5: return 0xFF8B4513;
+            default: return 0xFF000000;
         }
     }
 
@@ -212,24 +185,21 @@ public class MainActivity extends AppCompatActivity {
             for (int j = 0; j < cols; j++) {
                 if (game.getCell(i, j).isMine()) {
                     buttons[i][j].setText("💣");
-                    buttons[i][j].setBackgroundColor(0xFFFF0000);
+                    buttons[i][j].setBackgroundColor(COLOR_MINE);
                 }
             }
         }
     }
 
     private void checkWin() {
-        int unopenedSafe = 0;
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 Cell cell = game.getCell(i, j);
-                if (!cell.isMine() && !cell.isOpen()) {
-                    unopenedSafe++;
-                }
+                if (!cell.isMine() && !cell.isOpen()) return;
             }
         }
 
-        if (unopenedSafe == 0 && gameActive) {
+        if (gameActive) {
             gameActive = false;
             stopTimer();
             new AlertDialog.Builder(this)

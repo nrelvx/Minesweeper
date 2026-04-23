@@ -1,8 +1,8 @@
 package com.example.minesweeper;
 
-public class Cell {
-    protected boolean isOpen;
-    protected boolean isFlagged;
+public abstract class Cell {
+    private boolean isOpen;
+    private boolean isFlagged;
 
     public void open() {
         if (!isFlagged) {
@@ -24,7 +24,9 @@ public class Cell {
         return isFlagged;
     }
 
-    public boolean isMine() {
-        return false;
+    public abstract boolean isMine();
+
+    public int getMinesAround() {
+        return 0;
     }
 }

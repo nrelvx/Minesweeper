@@ -9,30 +9,43 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.gridlayout.widget.GridLayout;
 
+/**
+ * Головна Activity гри "Сапер" для Android.
+ * Відповідає за графічний інтерфейс, взаємодію з гравцем,
+ * обробку натискань, таймер, прапорці та перевірку перемоги/поразки.
+ * Демонструє роботу з Android компонентами, GridLayout,
+ * обробниками подій, діалоговими вікнами та інтеграцію з ігровою логікою.
+ */
 public class MainActivity extends AppCompatActivity {
 
-    private static final int COLOR_MINE = 0xFFFF0000;
-    private static final int COLOR_OPEN_EMPTY = 0xFFAAAAAA;
-    private static final int COLOR_OPEN_NUMBER = 0xFFFFFFFF;
-    private static final int COLOR_CLOSED = 0xFF808080;
-    private static final int COLOR_FLAGGED = 0xFFFFA500;
+    // Кольори для різних станів клітинок (формат ARGB)
+    private static final int COLOR_MINE = 0xFFFF0000;          // Червоний для міни
+    private static final int COLOR_OPEN_EMPTY = 0xFFAAAAAA;    // Сірий для пустої клітинки
+    private static final int COLOR_OPEN_NUMBER = 0xFFFFFFFF;   // Білий для числової клітинки
+    private static final int COLOR_CLOSED = 0xFF808080;        // Темно-сірий для закритої
+    private static final int COLOR_FLAGGED = 0xFFFFA500;       // Помаранчевий для прапорця
 
-    private Game game;
-    private GridLayout gridLayout;
-    private Button[][] buttons;
-    private TextView txtTimer, txtMines;
-    private ImageButton btnRestart;
-    private Button btnRules;
+    private Game game;                 // Об'єкт ігрової логіки
+    private GridLayout gridLayout;     // Контейнер для клітинок (сітка)
+    private Button[][] buttons;        // Двовимірний масив кнопок (клітинок)
+    private TextView txtTimer, txtMines;  // Текстові поля для таймера та лічильника мін
+    private ImageButton btnRestart;    // Кнопка перезапуску гри
+    private Button btnRules;           // Кнопка правил гри
 
-    private int rows = 9;
-    private int cols = 9;
-    private int mines = 12;
-    private int flagsLeft;
-    private int seconds = 0;
-    private Handler timerHandler = new Handler();
-    private boolean gameActive = true;
-    private Runnable timerRunnable;
+    private int rows = 9;      // Кількість рядків на полі
+    private int cols = 9;      // Кількість стовпців на полі
+    private int mines = 12;    // Кількість мін на полі
+    private int flagsLeft;     // Скільки прапорців залишилось (максимум = mines)
+    private int seconds = 0;   // Лічильник секунд (таймер)
+    private Handler timerHandler = new Handler();  // Для оновлення таймера
+    private boolean gameActive = true;             // Чи активна гра (не завершена)
+    private Runnable timerRunnable;                // Завдання для таймера
 
+    /**
+     * Викликається при створенні Activity.
+     * Ініціалізує інтерфейс, кнопки та запускає нову гру.
+     * @param savedInstanceState збережений стан Activity (якщо є)
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +63,11 @@ public class MainActivity extends AppCompatActivity {
         btnRules.setOnClickListener(v -> showRulesDialog());
     }
 
+    /**
+     * Показує діалогове вікно з правилами гри.
+     * Містить мету, керування та пояснення цифр.
+     * Демонструє роботу з AlertDialog.
+     */
     private void showRulesDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("📖 Правила гри")
@@ -65,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * Розпочинає нову гру: створює об'єкт Game, скидає таймер, прапорці та поле.
+     */
     private void startNewGame() {
         game = new Game(rows, cols, mines);
         flagsLeft = mines;
@@ -76,6 +97,11 @@ public class MainActivity extends AppCompatActivity {
         createBoard();
     }
 
+    /**
+     * Створює графічне ігрове поле з кнопок.
+     * Обчислює розмір клітинки залежно від розміру екрану.
+     * Додає обробники короткого та довгого натискань.
+     */
     private void createBoard() {
         gridLayout.removeAllViews();
         gridLayout.setColumnCount(cols);
@@ -108,6 +134,14 @@ public class MainActivity extends AppCompatActivity {
         updateBoardUI();
     }
 
+    /**
+     * Обробляє коротке натискання на клітинку (спроба відкрити).
+     * Якщо гра активна і немає прапорця - відкриває клітинку.
+     * При першому відкритті запускає таймер.
+     * При відкритті міни - показує діалог програшу.
+     * @param row рядок натиснутої клітинки
+     * @param col стовпець натиснутої клітинки
+     */
     private void handleCellClick(int row, int col) {
         if (!gameActive || game.getCell(row, col).isFlagged()) return;
 
@@ -123,14 +157,24 @@ public class MainActivity extends AppCompatActivity {
             new AlertDialog.Builder(this)
                     .setTitle("💥 БАХ!")
                     .setMessage("Ви наступили на міну!\n\nЧас: " + seconds + " секунд")
-                    .setPositiveButton("Нова гра", (dialog, which) -> startNewGame())
-                    .setNegativeButton("Вийти", (dialog, which) -> finish())
+                    .setPositiveButton("Нова гра", (dialog, which) ->
+                            startNewGame())
+                    .setNegativeButton("Вийти", (dialog, which) ->
+                            finish())
                     .show();
         } else {
             checkWin();
         }
     }
 
+    /**
+     * Обробляє довге натискання на клітинку (поставити/зняти прапорець).
+     * Прапорець можна ставити тільки на закритій клітинці.
+     * Оновлює лічильник прапорців та перевіряє перемогу.
+     * @param row рядок натиснутої клітинки
+     * @param col стовпець натиснутої клітинки
+     * @return true - подія оброблена
+     */
     private boolean handleCellLongClick(int row, int col) {
         if (!gameActive) return false;
 
@@ -145,6 +189,10 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Оновлює графічне відображення всіх клітинок на полі.
+     * Відображає текст, кольори, прапорці, міни та числа.
+     */
     private void updateBoardUI() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -169,17 +217,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Повертає колір для тексту числа залежно від його значення.
+     * @param num число (1-8) для визначення кольору
+     * @return колір у форматі ARGB
+     */
     private int getNumberColor(int num) {
         switch (num) {
-            case 1: return 0xFF0000FF;
-            case 2: return 0xFF008000;
-            case 3: return 0xFFFF0000;
-            case 4: return 0xFF000080;
-            case 5: return 0xFF8B4513;
-            default: return 0xFF000000;
+            case 1: return 0xFF0000FF;  // Синій
+            case 2: return 0xFF008000;  // Зелений
+            case 3: return 0xFFFF0000;  // Червоний
+            case 4: return 0xFF000080;  // Темно-синій
+            case 5: return 0xFF8B4513;  // Коричневий
+            default: return 0xFF000000; // Чорний
         }
     }
 
+    /**
+     * Показує всі міни на полі (при програші).
+     * Використовується для демонстрації гравцеві, де були міни.
+     */
     private void showAllMines() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -191,6 +248,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Перевіряє, чи гравець виграв (відкрив всі безпечні клітинки).
+     * При перемозі зупиняє таймер та показує діалог з результатами.
+     */
     private void checkWin() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -204,13 +265,20 @@ public class MainActivity extends AppCompatActivity {
             stopTimer();
             new AlertDialog.Builder(this)
                     .setTitle("🎉 ПЕРЕМОГА! 🎉")
-                    .setMessage("Вітаємо!\n\nЧас: " + seconds + " секунд\nВикористано прапорців: " + (mines - flagsLeft) + "/" + mines)
-                    .setPositiveButton("Грати знову", (dialog, which) -> startNewGame())
-                    .setNegativeButton("Вийти", (dialog, which) -> finish())
+                    .setMessage("Вітаємо!\n\nЧас: " + seconds + " секунд\nВикористано прапорців: "
+                            + (mines - flagsLeft) + "/" + mines)
+                    .setPositiveButton("Грати знову", (dialog, which) ->
+                            startNewGame())
+                    .setNegativeButton("Вийти", (dialog, which) ->
+                            finish())
                     .show();
         }
     }
 
+    /**
+     * Запускає таймер, який збільшує лічильник секунд кожну секунду.
+     * Оновлює текст на екрані.
+     */
     private void startTimer() {
         timerRunnable = new Runnable() {
             @Override
@@ -225,6 +293,9 @@ public class MainActivity extends AppCompatActivity {
         timerHandler.postDelayed(timerRunnable, 1000);
     }
 
+    /**
+     * Зупиняє таймер (видаляє заплановане завдання).
+     */
     private void stopTimer() {
         if (timerRunnable != null) {
             timerHandler.removeCallbacks(timerRunnable);

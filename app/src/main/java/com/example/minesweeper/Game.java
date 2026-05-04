@@ -4,12 +4,25 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
+/**
+ * Головний ігровий клас, що керує логікою гри "Сапер".
+ * Відповідає за створення поля, розміщення мін, підрахунок чисел,
+ * відкриття клітинок та рекурсивне відкриття порожніх областей.
+ * Демонструє роботу з двовимірними масивами, BFS-алгоритмом,
+ * випадковою генерацією та взаємодією з об'єктами Cell.
+ */
 public class Game {
-    private Cell[][] board;
-    private int rows;
-    private int cols;
-    private int mines;
+    private Cell[][] board;  // Ігрове поле (матриця клітинок)
+    private int rows;        // Кількість рядків на полі
+    private int cols;        // Кількість стовпців на полі
+    private int mines;       // Загальна кількість мін на полі
 
+    /**
+     * Конструктор гри. Ініціалізує поле, розміщує міни та обчислює цифри навколо.
+     * @param rows  кількість рядків на ігровому полі
+     * @param cols  кількість стовпців на ігровому полі
+     * @param mines кількість мін, які потрібно розмістити
+     */
     public Game(int rows, int cols, int mines) {
         this.rows = rows;
         this.cols = cols;
@@ -17,6 +30,7 @@ public class Game {
 
         board = new Cell[rows][cols];
 
+        // Заповнення поля числовими клітинками з нулями (тимчасово)
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 board[i][j] = new NumberCell(0);
@@ -27,6 +41,11 @@ public class Game {
         calculateMinesAround();
     }
 
+    /**
+     * Розміщує задану кількість мін на полі у випадкових позиціях.
+     * Використовує Random для генерації координат.
+     * Міни не розміщуються на вже зайнятих позиціях.
+     */
     private void placeMines() {
         Random rand = new Random();
         int placedMines = 0;
@@ -42,6 +61,11 @@ public class Game {
         }
     }
 
+    /**
+     * Обчислює для кожної не-мінової клітинки кількість мін навколо неї.
+     * Перебирає всі 8 сусідніх напрямків та підраховує міни.
+     * Результат зберігається у NumberCell через setMinesAround().
+     */
     private void calculateMinesAround() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -62,10 +86,24 @@ public class Game {
         }
     }
 
+    /**
+     * Повертає клітинку за вказаними координатами.
+     * @param row рядок клітинки
+     * @param col стовпець клітинки
+     * @return об'єкт Cell у вказаній позиції
+     */
     public Cell getCell(int row, int col) {
         return board[row][col];
     }
 
+    /**
+     * Відкриває клітинку за координатами.
+     * Якщо клітинка вже відкрита або має прапорець - нічого не робить.
+     * Якщо відкрита клітинка без мін і має 0 мін навколо -
+     * автоматично відкриває всі сусідні клітинки через BFS.
+     * @param row рядок клітинки для відкриття
+     * @param col стовпець клітинки для відкриття
+     */
     public void openCell(int row, int col) {
         Cell cell = board[row][col];
 
@@ -80,6 +118,14 @@ public class Game {
         }
     }
 
+    /**
+     * Алгоритм BFS (пошук в ширину) для відкриття сусідніх порожніх клітинок.
+     * Використовує чергу для обробки клітинок з 0 мін навколо.
+     * Відкриває всі сусідні клітинки в 8 напрямках.
+     * Демонструє роботу з чергою та алгоритмом пошуку.
+     * @param row початковий рядок для відкриття сусідів
+     * @param col початковий стовпець для відкриття сусідів
+     */
     private void openNeighbors(int row, int col) {
         Queue<int[]> queue = new LinkedList<>();
         queue.add(new int[]{row, col});
@@ -108,6 +154,12 @@ public class Game {
         }
     }
 
+    /**
+     * Перевіряє, чи знаходяться координати в межах ігрового поля.
+     * @param row рядок для перевірки
+     * @param col стовпець для перевірки
+     * @return true - якщо координати в межах поля, false - якщо за межами
+     */
     private boolean isInBounds(int row, int col) {
         return row >= 0 && row < rows && col >= 0 && col < cols;
     }
